@@ -167,14 +167,6 @@
 
 
 
-
-
-
-
-
-
-
-
 import { useState } from "react";
 import { CartProvider } from "./context/CartContext";
 import Navbar from "./components/Navbar";
@@ -188,14 +180,25 @@ import Footer from "./components/Footer";
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
 import OrderConfirmation from "./components/OrderConfirmation";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import AccountPage from "./pages/AccountPage";
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const [user, setUser] = useState(null);
+  const [view, setView] = useState("home"); // "home", "login", "signup", "account"
 
+  // Checkout handlers
   const handleCheckout = () => {
+    if (!user) {
+      alert("Please login to place an order!");
+      setView("login");
+      return;
+    }
     setIsCartOpen(false);
     setIsCheckoutOpen(true);
   };
@@ -211,17 +214,44 @@ function App() {
     setOrderId("");
   };
 
+  // Logout handler
+  const handleLogout = () => {
+    setUser(null);
+    setView("home");
+  };
+
+  // Navbar props
+  const navbarProps = {
+    onCartClick: () => setIsCartOpen(true),
+    onLoginClick: () => setView("login"),
+    onSignupClick: () => setView("signup"),
+    onAccountClick: () => setView("account"),
+    user,
+    onLogout: handleLogout,
+  };
+
   return (
     <CartProvider>
-      <Navbar onCartClick={() => setIsCartOpen(true)} />
-      <Hero />
-      <Features />
-      <Menu onAddToCartOpen={() => setIsCartOpen(true)} />
-      <About />
-      <Testimonials />
-      <Contact />
-      <Footer />
+      <Navbar {...navbarProps} />
 
+      {/* Conditional Rendering */}
+      {view === "home" && (
+        <>
+          <Hero />
+          <Features />
+          <Menu onAddToCartOpen={() => setIsCartOpen(true)} />
+          <About />
+          <Testimonials />
+          <Contact />
+          <Footer />
+        </>
+      )}
+
+      {view === "login" && <LoginPage setUser={(u) => { setUser(u); setView("home"); }} />}
+      {view === "signup" && <SignupPage setUser={(u) => { setUser(u); setView("home"); }} />}
+      {view === "account" && user && <AccountPage user={user} />}
+
+      {/* Cart / Checkout / Order Confirmation */}
       <Cart
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
@@ -232,6 +262,7 @@ function App() {
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
         onSuccess={handleOrderSuccess}
+        user={user}
       />
 
       <OrderConfirmation
