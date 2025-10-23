@@ -76,3 +76,4 @@ backend/temp/
 .netlify/
 .vercel/
 
+/backend/.env
